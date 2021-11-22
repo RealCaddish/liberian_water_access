@@ -13,12 +13,10 @@ fs.readFile('../project-files/liberia-flow-data.csv', 'utf-8', (err, csvString) 
     latfield: Number('lat_deg'),
     lonfield: Number('lon_deg'),
     delimiter: ','
-  }, function (err, data) {
+  }, function (err, geojson) {
     if (err) throw err;
 
-    console.log(data)
-    
-    break; 
+    // console.log(data)
 
     // write the file 
     fs.writeFile('../data/liberia_water.json', JSON.stringify(geojson), 'utf-8', (err) => {

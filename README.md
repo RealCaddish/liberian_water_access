@@ -42,5 +42,14 @@ Ok great!
 Now we can start to see what fields we'd like to keep as well as begin to filter features and other things to trim down our boundary files. Let's start with the sovereignty of Liberia:
 
 ```
+$ mapshaper ne_10m_admin_0_countries.shp -filter "ADMIN=='Liberia'" -simplify dp 15% -o format=geojson liberia.json
+```
+<b> mapshaper tip: </b> When selecting features, be sure the syntax is as follows -  'field == "feature"' 
 
+We can go ahead and do this for our other shapefiles for counties.
+
+<b> Counties:
+
+```
+$ mapshaper ne_10m_admin_1_states_provinces.shp -filter "admin=='Liberia'" -filter-fields admin,name,latitude,longitude,name_en  -simplify dp 15% -o format=geojson liberia_counties.json
 ```
