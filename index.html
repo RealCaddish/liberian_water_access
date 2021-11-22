@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+
+  <title>US County-Level Covid Cases and Deaths</title>
+  <link href="https://api.mapbox.com/mapbox.js/v3.1.1/mapbox.css" rel="stylesheet" />
+  <script src="https://d3js.org/d3-fetch.v1.min.js"></script>
+  <script src="https://unpkg.com/topojson@3"></script>
+
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    #map {
+      position: absolute;
+      width: 100%;
+      top: 0;
+      bottom: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="map"></div>
+
+  <script src="https://api.mapbox.com/mapbox.js/v3.1.1/mapbox.js"></script>
+  <script src="https://npmcdn.com/@turf/turf/turf.min.js"></script>
+
+  <script>
+    var map = L.map("map", {
+      zoomSnap: 0.1,
+      center: [6.6476465, -9.701006],
+      zoom: 8
+    });
+
+    // mapbox access token
+    var accessToken = "pk.eyJ1IjoiZGVhdG5uciIsImEiOiJja3Z2MnQ5YWUwbTI5Mm5vNmwwajM0N2prIn0.fnQmRz1QKtEr17wabjsPOA"
+
+    // add mapbox tile layers using access token
+    L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+      attribution: '© <a href="https://www.mapbox.com/about/maps/">Mapbox</a> © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> <strong><a href="https://www.mapbox.com/map-feedback/" target="_blank">Improve this map</a></strong>',
+      tileSize: 512,
+      maxZoom: 18,
+      zoomOffset: -1,
+      id: 'mapbox/streets-v11',
+      accessToken: 'pk.eyJ1IjoiZGVhdG5uciIsImEiOiJja3Z2MnQ5YWUwbTI5Mm5vNmwwajM0N2prIn0.fnQmRz1QKtEr17wabjsPOA'
+    }).addTo(map);
+
+    // d3-fetch request of counties data
+    d3.json("data/clean_data/liberia.json").then(function (data) {
+      console.log(data)
+    });
+
+    function drawMap(data) {
+      // convert counties topojson to GeoJSON
+      var geojson = topojson.feature(data, data.objects);
+
+      // add this to the map 
+      var counties = L.geoJson(geojson, {
+        style: function (feature, layer) {
+          return {
+            color: "white",
+            fillColor: "#448ee4",
+            fillOpacity: ".7",
+            weight: 1
+          };
+        }
+      }).addTo(map);
+    }
+
+
+  </script>
+</body>

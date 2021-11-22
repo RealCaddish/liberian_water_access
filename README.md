@@ -9,7 +9,7 @@
    
 
 
-This project aims to map out internal water access in Liberia from data collected by the Liberian Water Point Data provided by the Akvo Foundation, a not-for-profit foundation that creates open source internet and mobile software sensors working towards collaborative development efforts in the fields of water, sanitation, agriculture, health, energy and other fields around the world. This particular dataset seeks to map out access points to clean drinking water throughout Liberia and provide information about drinking pump status, provider, and other useful information. 
+This project aims to map out internal water access in Liberia from data collected by the Liberian Water Point Data provided by the Akvo Foundation, a not-for-profit foundation that creates open source internet and mobile software sensors working towards collaborative development efforts in the fields of water, sanitation, agriculture, health, energy and other fields around the world. This particular dataset seeks to map out access points water and provide information about drinking pump status, fecal content, provider, and other useful information. 
 
 The project will utilize npm scripts through Node.js to configure analysis on the front and backends. The workflow process will be demonstrated in Chapter 2, followed by a webmapping process that consists of Chapter 3. Data collected for this project is outlined here:
 
@@ -53,3 +53,40 @@ We can go ahead and do this for our other shapefiles for counties.
 ```
 $ mapshaper ne_10m_admin_1_states_provinces.shp -filter "admin=='Liberia'" -filter-fields admin,name,latitude,longitude,name_en  -simplify dp 15% -o format=geojson liberia_counties.json
 ```
+</b>
+
+When we check our created JSON files, we'll see that they're of exceptional trimming perfect for webmapping. We'll come back to these files later when we're ready to start the web map process. 
+
+<img src='images/screenshot1.JPG'>
+
+Now, let's turn to using npm to convert our csv to geojson for a webmapping format.
+
+### Chapter 2.3 - Convert Large CSV Data to Geojson 
+
+We'll begin by doing an initial backend script to create a GeoJSON file out of the rather large Liberian Water Access data file. In order to begin our geoprocess with turf, we'll need to create a file that uses the lat/lon fields as our custom geometry. We can see that there is some initial formatting of the csv that needs to be modified so that the structure is sound. Remove 'sep=' that is in the first line of the csv file. 
+
+Next, I've created a new script within the build-scripts directory called <i>liberia_water_points.js.</i>
+
+```
+$ type nul> liberia_water_points.js
+```
+
+We'll need to load some npm packages into our package manager to write out our program. Install the following packages:
+
+```
+$ npm install chalk
+$ npm install csv2geojson
+$ npm install @turf/turf
+$ npm install fs
+```
+
+See the <i>liberia_water_points.js </i> script to see how I converted the csv data to geojson. The output file gives us a 21MB point data file that is absurdly too large to use for any webmapping purposes. Before we continue with using turf, let's try to trim it down with Mapshaper to make it somewhat lighter. 
+
+```
+$ mapshaper liberia_water.json -filter-fields adm1,adm2,count,data_lnk,fecal_coliform_presence,fecal_coliform_val
+ue,install_year,installer,location,management,pay,photo_lnk,report_date,source,status,status_id,water_source,water_tech -simplify dp 15% -o force liberia_water.json
+```
+
+### Chapter 2.4 - Frontend Turf Script #1
+
+First, we can try to 
