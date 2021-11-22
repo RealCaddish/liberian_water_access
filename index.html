@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
 
-  <title>US County-Level Covid Cases and Deaths</title>
+  <title>Liberian Water Access Map</title>
   <link href="https://api.mapbox.com/mapbox.js/v3.1.1/mapbox.css" rel="stylesheet" />
   <script src="https://d3js.org/d3-fetch.v1.min.js"></script>
   <script src="https://unpkg.com/topojson@3"></script>
@@ -58,11 +58,8 @@
     });
 
     function drawMap(data) {
-      // convert counties topojson to GeoJSON
-      var geojson = topojson.feature(data, data.objects);
-
-      // add this to the map 
-      var counties = L.geoJson(geojson, {
+      // add liberia to map
+      var liberia = L.geoJson(data, {
         style: function (feature, layer) {
           return {
             color: "white",
