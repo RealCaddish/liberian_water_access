@@ -1,0 +1,25 @@
+{
+  "name": "liberian_water_access",
+  "version": "1.0.0",
+  "description": "data mapping from Liberian Water Point Data",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RealCaddish/liberian_water_access.git"
+  },
+  "author": "Nathaniel R Deaton",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/RealCaddish/liberian_water_access/issues"
+  },
+  "homepage": "https://github.com/RealCaddish/liberian_water_access#readme",
+  "dependencies": {
+    "@turf/turf": "^6.5.0",
+    "chalk": "^4.1.2",
+    "csvtogeojson": "^0.0.2",
+    "fs": "^0.0.1-security"
+  }
+}
