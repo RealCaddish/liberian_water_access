@@ -31,6 +31,8 @@
 
   <script src="https://api.mapbox.com/mapbox.js/v3.1.1/mapbox.js"></script>
   <script src="https://npmcdn.com/@turf/turf/turf.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.2.1.min.js"
+    integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
 
   <script>
     var map = L.map("map", {
@@ -52,25 +54,75 @@
       accessToken: 'pk.eyJ1IjoiZGVhdG5uciIsImEiOiJja3Z2MnQ5YWUwbTI5Mm5vNmwwajM0N2prIn0.fnQmRz1QKtEr17wabjsPOA'
     }).addTo(map);
 
-    // d3-fetch request of counties data
-    d3.json("data/clean_data/liberia.json").then(function (data) {
-      console.log(data)
-    });
+    // use D3 fetch to request data with async request
+    const liberia = d3.json('data/clean_data/liberia.json');
+    const lib_counties = d3.json('data/clean_data/liberia_counties.json');
+    const lib_roads = d3.json('data/clean_data/roads_trimmed2.json');
+    const waterData = d3.json('data/clean_data/liberia_water.json');
 
+    // Promise statement to wait until data is loaded
+    Promise.all([liberia, lib_counties, lib_roads, waterData]).then(drawMap);
+
+    // drawMap function call
     function drawMap(data) {
-      // add liberia to map
-      var liberia = L.geoJson(data, {
+      // save out the data arrays to specific variables
+      const liberia = data[0];
+      const counties = data[1];
+      const roads = data[2];
+      const water = data[3];
+
+      // convert TopoJSON to GeoJSON
+      var geojson = topojson.feature(roads, roads.objects.roads3);
+
+      // Create road Leaflet Layer
+      var roadLayer = L.geoJson(geojson, {
         style: function (feature, layer) {
           return {
-            color: "white",
-            fillColor: "#448ee4",
-            fillOpacity: ".7",
-            weight: 1
-          };
+            color: 'black',
+            weight: 2
+          }
         }
-      }).addTo(map);
+      }).addTo(map)
+
+      // Turf function for road buffer 
+      roadLayer.eachLayer(function (layer) {
+        // convert Leaflet layer to geojson for turf processing w/ Leaflet
+        // toGeoJSON() method
+        var roadFeature = layer.toGeoJSON();
+
+        const buffered = turf.buffer(roadFeature, .1, {
+          units: "kilometers"
+        })
+
+        // add the buffers to the map 
+        var bufferLayer = L.geoJson(buffered, {
+          style: function (feature, layer) {
+            return {
+              color: '#D2753C',
+              fillOpacity: .6
+            }
+          },
+          onEachFeature(feature, layer) {
+            layer.on('click', function () {
+              map.flyToBounds(layer.getBounds(), {
+                padding: [150, 150]
+              })
+            })
+          }
+        }).addTo(map)
+      })
     }
+    // //create water points Leaflet layer
+    // var waterLayer = L.geoJson(water);
 
+    // // Turf script to determine water points within .1 km buffer
+    // waterLayer.eachLayer(function (layer) {
 
+    //   var waterFeature = layer.toGeoJSON();
+
+    //   var ptsWithin = turf.pointsWithinPolygon(waterFeature, buffered);
+
+    //   console.log(ptsWithin)
+    // })
   </script>
 </body>

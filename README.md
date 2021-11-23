@@ -19,13 +19,13 @@ The project will utilize npm scripts through Node.js to configure analysis on th
 
 This project seeks to produce geoprocessing analysis solely through npm packages - particularly turf.js. 
 
-## Chapter 2: Workflow 
+## <b>Chapter 2: Workflow </b>
 
 After downloading all of our necessary files, extracting them into subdirectories within the repo, and some initial readme commits, let's begin by utilizing mapshaper to trim down our vector shapefiles for Liberia including the sovereignty boundary, provinces, and urban areas. We'll work primarily through the command line to achieve these goals. Afterwards, we'll move into the Liberian Water Point dataset to do some processing on the front and backends in subtopics within this chapter. 
  
- ### Chapter 2.2 - Mapshaper Processing. 
+ ### <b> Chapter 2.2 - Mapshaper Processing. </b>
 
- Let's start from the outside in. First, I'll begin by getting info about the sovereignty, provinces, and urban areas shapefiles downloaded from Natural Earth:
+ Let's start from the outside working in. First, I'll begin by getting info about the sovereignty, provinces, and urban areas shapefiles downloaded from Natural Earth:
 
  ```
  $ mapshaper sovereignty.shp -info
@@ -61,7 +61,7 @@ When we check our created JSON files, we'll see that they're of exceptional trim
 
 Now, let's turn to using npm to convert our csv to geojson for a webmapping format.
 
-### Chapter 2.3 - Convert Large CSV Data to Geojson 
+### <b>Chapter 2.3 - Convert Large CSV Data to Geojson </b>
 
 We'll begin by doing an initial backend script to create a GeoJSON file out of the rather large Liberian Water Access data file. In order to begin our geoprocess with turf, we'll need to create a file that uses the lat/lon fields as our custom geometry. We can see that there is some initial formatting of the csv that needs to be modified so that the structure is sound. Remove 'sep=' that is in the first line of the csv file. 
 
@@ -87,6 +87,37 @@ $ mapshaper liberia_water.json -filter-fields adm1,adm2,count,data_lnk,fecal_col
 ue,install_year,installer,location,management,pay,photo_lnk,report_date,source,status,status_id,water_source,water_tech -simplify dp 15% -o force liberia_water.json
 ```
 
-### Chapter 2.4 - Frontend Turf Script #1
+We were able to trim it down somewhat, but the file is still very large. We'll remedy this later with some node in the backend later in the chapter to account for a more attainable webmapping goal. 
 
-First, we can try to 
+### <b>Chapter 2.4 - Frontend Turf Script #1 - Buffer of Roads</b>
+
+Our first front-end script with turf will be to buffer the roads by 1/10th of a kilometer on either side of road centerlines. The tenth of kilometer was chosen just as a quick simulation for easy walkable access to nearby water pumps that can be accessed from the road. The idea that is working here is to find out how many of these pumps actually fall within a distance of road accessibility.
+
+To start this process, we'll first need to convert our roads topoJSON file into a geojson format. Write the following code:
+```
+var geojson = topojson.feature(roads, roads.objects.roads3);
+
+    var roadLayer = L.geoJson(geojson, {
+      style: function(feature, layer) {
+        return {
+          color: 'black', 
+          weight: 2
+        };
+      }
+    }).addTo(map)
+```
+
+This creates our Leaflet GeoJson layer that can be directly added to the map. Next, in order to run a turf geoprocessing task on the roads, we need to convert the Leaflet GeoJson layer into a regular <i>GeoJSON</i> layer.
+
+Write out this code:
+
+```
+roadLayer.eachLayer(function(layer) {
+      
+var roadFeature = layer.toGeoJSON();
+
+var buffered = turf.buffer(roadFeature, .1, {units: "kilometers"})
+```
+
+The roadLayer Leaflet geoJson object is converted here into a regular <i>GeoJSON</i> object and is then buffered using the <i>turf.buffer</i> method. 
+
