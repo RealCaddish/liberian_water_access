@@ -61,7 +61,7 @@ When we check our created JSON files, we'll see that they're of exceptional trim
 
 Now, let's turn to using npm to convert our csv to geojson for a webmapping format.
 
-### <b>Chapter 2.3 - Convert Large CSV Data to Geojson </b>
+### <b>Chapter 2.3 - Server-Side Script 1 Convert Large CSV Data to Geojson </b>
 
 We'll begin by doing an initial backend script to create a GeoJSON file out of the rather large Liberian Water Access data file. In order to begin our geoprocess with turf, we'll need to create a file that uses the lat/lon fields as our custom geometry. We can see that there is some initial formatting of the csv that needs to be modified so that the structure is sound. Remove 'sep=' that is in the first line of the csv file. 
 

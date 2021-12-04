@@ -1,128 +1,158 @@
 <!DOCTYPE html>
-
-<html lang="en">
+<html>
 
 <head>
-  <meta charset="utf-8" />
-
-  <title>Liberian Water Access Map</title>
-  <link href="https://api.mapbox.com/mapbox.js/v3.1.1/mapbox.css" rel="stylesheet" />
-  <script src="https://d3js.org/d3-fetch.v1.min.js"></script>
-  <script src="https://unpkg.com/topojson@3"></script>
-
+  <meta charset='utf-8' />
+  <title>Display a map</title>
+  <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+  <script src='https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.js'></script>
+  <link href='https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.css' rel='stylesheet' />
   <style>
     body {
-      font-family: sans-serif;
       margin: 0;
       padding: 0;
     }
 
     #map {
       position: absolute;
-      width: 100%;
       top: 0;
       bottom: 0;
+      width: 100%;
     }
   </style>
 </head>
 
 <body>
-  <div id="map"></div>
 
-  <script src="https://api.mapbox.com/mapbox.js/v3.1.1/mapbox.js"></script>
-  <script src="https://npmcdn.com/@turf/turf/turf.min.js"></script>
-  <script src="https://code.jquery.com/jquery-3.2.1.min.js"
-    integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
-
+  <div id='map'></div>
   <script>
-    var map = L.map("map", {
-      zoomSnap: 0.1,
-      center: [6.6476465, -9.701006],
-      zoom: 8
+    mapboxgl.accessToken = 'pk.eyJ1IjoiZGVhdG5uciIsImEiOiJja3Z2MnQ5YWUwbTI5Mm5vNmwwajM0N2prIn0.fnQmRz1QKtEr17wabjsPOA';
+
+    // create navigation object to add to map 
+    const nav = new mapboxgl.NavigationControl({
+      visualizePitch: true,
+      showCompass: true,
+      showZoom: true
     });
 
-    // mapbox access token
-    var accessToken = "pk.eyJ1IjoiZGVhdG5uciIsImEiOiJja3Z2MnQ5YWUwbTI5Mm5vNmwwajM0N2prIn0.fnQmRz1QKtEr17wabjsPOA"
+    // create a scaleControl object to add to map 
+    const scale = new mapboxgl.ScaleControl({
+      maxWidth: 80,
+      unit: 'metric'
+    })
 
-    // add mapbox tile layers using access token
-    L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
-      attribution: '© <a href="https://www.mapbox.com/about/maps/">Mapbox</a> © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> <strong><a href="https://www.mapbox.com/map-feedback/" target="_blank">Improve this map</a></strong>',
-      tileSize: 512,
-      maxZoom: 18,
-      zoomOffset: -1,
-      id: 'mapbox/streets-v11',
-      accessToken: 'pk.eyJ1IjoiZGVhdG5uciIsImEiOiJja3Z2MnQ5YWUwbTI5Mm5vNmwwajM0N2prIn0.fnQmRz1QKtEr17wabjsPOA'
-    }).addTo(map);
 
-    // use D3 fetch to request data with async request
-    const liberia = d3.json('data/clean_data/liberia.json');
-    const lib_counties = d3.json('data/clean_data/liberia_counties.json');
-    const lib_roads = d3.json('data/clean_data/roads_trimmed2.json');
-    const waterData = d3.json('data/clean_data/liberia_water.json');
+    var map = new mapboxgl.Map({
+      container: 'map', // container id
+      style: 'mapbox://styles/deatnnr/ckwmk20a017rg15ob2vwoy464', // stylesheet location
+      center: [-8.316747, 6.503533], // starting position [lng, lat]
+      zoom: 3, // starting zoom
+      attributionControl: false
+    }).addControl(new mapboxgl.AttributionControl({
+      customAttribution: 'Map designed by Nathaniel Deaton'
+    })).addControl(nav, 'bottom-right').addControl(scale);
 
-    // Promise statement to wait until data is loaded
-    Promise.all([liberia, lib_counties, lib_roads, waterData]).then(drawMap);
-
-    // drawMap function call
-    function drawMap(data) {
-      // save out the data arrays to specific variables
-      const liberia = data[0];
-      const counties = data[1];
-      const roads = data[2];
-      const water = data[3];
-
-      // convert TopoJSON to GeoJSON
-      var geojson = topojson.feature(roads, roads.objects.roads3);
-
-      // Create road Leaflet Layer
-      var roadLayer = L.geoJson(geojson, {
-        style: function (feature, layer) {
-          return {
-            color: 'black',
-            weight: 2
-          }
-        }
-      }).addTo(map)
-
-      // Turf function for road buffer 
-      roadLayer.eachLayer(function (layer) {
-        // convert Leaflet layer to geojson for turf processing w/ Leaflet
-        // toGeoJSON() method
-        var roadFeature = layer.toGeoJSON();
-
-        const buffered = turf.buffer(roadFeature, .1, {
-          units: "kilometers"
-        })
-
-        // add the buffers to the map 
-        var bufferLayer = L.geoJson(buffered, {
-          style: function (feature, layer) {
-            return {
-              color: '#D2753C',
-              fillOpacity: .6
-            }
-          },
-          onEachFeature(feature, layer) {
-            layer.on('click', function () {
-              map.flyToBounds(layer.getBounds(), {
-                padding: [150, 150]
-              })
-            })
-          }
-        }).addTo(map)
+    map.on('load', () => {
+      // add the water point source here 
+      map.addSource('waterPumps', {
+        'type': 'vector',
+        'url': 'mapbox://deatnnr.ckwmjrq2f5acb20mr8g5xa2z2-03uc1'
       })
-    }
-    // //create water points Leaflet layer
-    // var waterLayer = L.geoJson(water);
 
-    // // Turf script to determine water points within .1 km buffer
-    // waterLayer.eachLayer(function (layer) {
+      map.addLayer({
+        'id': 'water-heat',
+        'type': 'heatmap',
+        'source': 'waterPumps',
+        'source-layer': 'Liberian_Water_Pumps',
+        'maxzoom': 12,
+        'paint': {
+          // increase the heatmap weight based on frequency and property magnitude
+          'heatmap-weight': [
+            'interpolate',
+            ['linear'],
+            1,
+            0,
+            0,
+            6,
+            1
+          ],
+          // increase heatmap color weight by zoom level 
+          // heatmap intensity is a multiplier on top of heatmap-weight
+          'heatmap-intensity': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            0,
+            1,
+            9,
+            3
+          ],
+          // color ramp for heatmap. Domain is 0, low, to 1, high. 
+          // begin color ramp at 0-stop with a 0-transparency color
+          // to create a blur-like effect
+          'heatmap-color': [
+            'interpolate',
+            ['linear'],
+            ['heatmap-density'],
+            0,
+            'rgba(178,24,43,0)',
+            0.2,
+            'rgb(239,138,98)',
+            0.4,
+            'rgb(253,219,199)',
+            0.6,
+            'rgb(209,229,240)',
+            0.8,
+            'rgb(103,169,207)',
+            1,
+            'rgb(9, 42, 87)'
+          ],
+          // Adjust the heatmap radius by zoom level
+          'heatmap-radius': 9,
+          // Transition from heatmap to circle layer by zoom level
+          'heatmap-opacity': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            7,
+            1,
+            9,
+            0,
+          ]
+        }
+      });
 
-    //   var waterFeature = layer.toGeoJSON();
-
-    //   var ptsWithin = turf.pointsWithinPolygon(waterFeature, buffered);
-
-    //   console.log(ptsWithin)
-    // })
+      // Ease with default options to null island for 5 seconds.
+      map.easeTo({
+        center: [-8.316747, 6.503533],
+        zoom: 6.4,
+        duration: 5000
+      });
+      // map.addLayer({
+      //   'id': 'water-point',
+      //   'type': 'circle',
+      //   'source': 'waterPumps',
+      //   'source-layer': 'Liberian_Water_Pumps',
+      //   'minzoom': 9,
+      //   'paint': {
+      //     'circle-color': '#448ee4',
+      //     'circle-stroke-color': 'white',
+      //     'circle-stroke-width': 1,
+      //     // Transition from heatmap to circle layer by zoom level 
+      //     'circle-opacity': [
+      //       'interpolate',
+      //       ['linear'],
+      //       ['zoom'],
+      //       7,
+      //       0,
+      //       8,
+      //       1
+      //     ]
+      //   }
+      // });
+    });
   </script>
+
 </body>
+
+</html>
